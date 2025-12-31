@@ -6,6 +6,7 @@ import shutil
 from send2trash import send2trash
 
 from Keybinds import bind_keyboard_shortcuts
+from ui import build_ui
 
 ###
 # left to add:
@@ -16,9 +17,7 @@ from Keybinds import bind_keyboard_shortcuts
 # if the selected folder has no images, prompt to
 # ask for different folder
 #
-# delete + backspace delete photos
 #
-# tab makes new folder
 ###
 
 SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", "mp4")
@@ -32,79 +31,14 @@ class PhotoSorterApp:
         self.root = root
         self.root.title("Photo Sorter")
 
-        #self.home_dir = Path.home()
         self.images = []
         self.index = 0
         self.current_image_path = None
         self.tk_image = None
 
-        self.build_ui()
+        build_ui(self)
         bind_keyboard_shortcuts(self)
         self.select_source_folder()
-
-    def build_ui(self):
-        self.content_frame = tk.Frame(self.root)
-        self.content_frame.pack(side="top", fill="both", expand=True)
-
-        self.image_frame = tk.Frame(self.content_frame, height=500)
-        self.image_frame.pack(side="top", fill="x")
-        self.image_frame.pack_propagate(False)
-
-        self.image_label = tk.Label(self.image_frame)
-        self.image_label.pack(expand=True)
-        
-        
-
-        # Scroll container
-        self.folder_canvas = tk.Canvas(self.content_frame, height=220)
-        self.folder_scrollbar = tk.Scrollbar(
-            self.content_frame, orient="vertical", command=self.folder_canvas.yview
-        )
-
-        self.folder_canvas.configure(yscrollcommand=self.folder_scrollbar.set)
-
-        self.folder_scrollbar.pack(side="right", fill="y")
-        self.folder_canvas.pack(side="left", fill="x", padx=10)
-
-        self.folder_frame = tk.Frame(self.folder_canvas)
-        self.folder_canvas.create_window(
-            (0, 0), window=self.folder_frame, anchor="nw"
-        )
-
-        # Ensure scrolling works
-        self.folder_frame.bind(
-            "<Configure>",
-            lambda e: self.folder_canvas.configure(
-                scrollregion=self.folder_canvas.bbox("all")
-            )
-        )
-
-                # Fixed bottom action bar
-        self.action_frame = tk.Frame(self.root)
-        self.action_frame.pack(side="bottom", fill="x", pady=10)
-
-        self.new_folder_btn = tk.Button(
-            self.action_frame,
-            text="➕ New Folder",
-            command=self.create_new_folder
-        )
-        self.new_folder_btn.pack(side="left", padx=10)
-
-        self.undo_btn = tk.Button(
-            self.action_frame,
-            text="↩ Undo",
-            command=self.undo_last_action
-        )
-        self.undo_btn.pack(side="left", padx=10)
-
-        self.delete_btn = tk.Button(
-            self.action_frame,
-            text="🗑 Delete Photo",
-            fg="red",
-            command=self.delete_image
-        )
-        self.delete_btn.pack(side="right", padx=10)
-
 
     def select_source_folder(self):
         folder = filedialog.askdirectory(title="Select Photo Folder")
