@@ -5,6 +5,8 @@ from pathlib import Path
 import shutil
 from send2trash import send2trash
 
+from Keybinds import bind_keyboard_shortcuts
+
 ###
 # left to add:
 # private delete folder that empties at the end
@@ -25,11 +27,6 @@ class PhotoSorterApp:
     def is_video(self, path: Path):
         return path.suffix.lower() == ".mp4"
     
-    def bind_keyboard_shortcuts(self):
-        self.root.bind("<Delete>", lambda e: self.delete_image())
-        self.root.bind("<BackSpace>", lambda e: self.delete_image())
-        self.root.bind("<Tab>", lambda e: self.create_new_folder())
-
     def __init__(self, root):
         self.undo_stack = []
         self.root = root
@@ -42,7 +39,7 @@ class PhotoSorterApp:
         self.tk_image = None
 
         self.build_ui()
-        self.bind_keyboard_shortcuts()
+        bind_keyboard_shortcuts(self)
         self.select_source_folder()
 
     def build_ui(self):
