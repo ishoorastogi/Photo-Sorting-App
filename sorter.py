@@ -7,6 +7,7 @@ from send2trash import send2trash
 
 from Keybinds import bind_keyboard_shortcuts
 from ui import build_ui
+from deletion import delete_current_image
 
 ###
 # left to add:
@@ -60,21 +61,7 @@ class PhotoSorterApp:
         self.index = 0
         self.load_image()
         self.refresh_folder_buttons()
-
-    # def load_image(self):
-    #     if self.index >= len(self.images):
-    #         messagebox.showinfo("Done", "All photos sorted!")
-    #         self.root.quit()
-    #         return
-
-    #     self.current_image_path = self.images[self.index]
-
-    #     img = Image.open(self.current_image_path)
-    #     img.thumbnail((900, 700))
-    #     self.tk_image = ImageTk.PhotoImage(img)
-
-    #     self.image_label.config(image=self.tk_image)
-        
+   
     def load_image(self):
         if self.index >= len(self.images):
             messagebox.showinfo("Done", "All files sorted")
@@ -150,30 +137,6 @@ class PhotoSorterApp:
             self.refresh_folder_buttons()
         except FileExistsError:
             messagebox.showerror("Error", "Folder already exists.")
-    
-    def delete_image(self):
-        if not self.current_image_path:
-            return
-
-        confirm = messagebox.askyesno(
-            "Delete Photo",
-            f"Move '{self.current_image_path.name}' to Trash?"
-        )
-
-        self.root.focus_force()
-
-        if not confirm:
-            return
-
-        self.undo_stack = [{
-            "type": "delete",
-            "path": self.current_image_path
-        }]
-
-        send2trash(str(self.current_image_path))
-
-        self.index += 1
-        self.load_image()
 
     def undo_last_action(self):
         if not self.undo_stack:

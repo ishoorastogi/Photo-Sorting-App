@@ -1,6 +1,7 @@
 ##gui
 
 import tkinter as tk
+from deletion import delete_current_image
 
 def build_ui(app):
     root = app.root
@@ -69,6 +70,6 @@ def build_ui(app):
         app.action_frame,
         text="🗑 Delete Photo",
         fg="red",
-        command=app.delete_image
+        command=lambda: delete_current_image(app)
     )
     app.delete_btn.pack(side="right", padx=10)
