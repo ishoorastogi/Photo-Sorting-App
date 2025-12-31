@@ -64,6 +64,9 @@ class PhotoSorterApp:
    
     def load_image(self):
         if self.index >= len(self.images):
+            from cleanup import cleanup_private_trash
+            cleanup_private_trash(self)
+
             messagebox.showinfo("Done", "All files sorted")
             self.root.quit()
             return
@@ -116,11 +119,11 @@ class PhotoSorterApp:
 
         shutil.move(self.current_image_path, destination)
 
-        self.undo_stack = [{
+        self.undo_stack.append ({
             "type": "move",
             "from": destination,
             "to": self.current_image_path
-        }]
+        })
 
         self.index += 1
         self.load_image()
@@ -151,14 +154,21 @@ class PhotoSorterApp:
             self.load_image()
 
         elif action["type"] == "delete":
-            messagebox.showinfo(
-                "Undo Delete",
-                "Undo for delete requires restoring from Trash manually."
-            )
+            shutil.move(action["from"], action["to"])
+            self.index = max(self.index - 1, 0)
+            self.load_image()
 
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = PhotoSorterApp(root)
+
+    from cleanup import cleanup_private_trash
+
+    def on_close():
+        cleanup_private_trash(app)
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", on_close)
+
     root.mainloop()
