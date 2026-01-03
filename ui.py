@@ -1,6 +1,7 @@
 ##gui
 
 import tkinter as tk
+
 from deletion import delete_current_image
 
 def build_ui(app):
@@ -15,8 +16,10 @@ def build_ui(app):
     app.image_frame.pack(side="top", fill="x")
     app.image_frame.pack_propagate(False)
 
+    # Image label (for photos)
     app.image_label = tk.Label(app.image_frame)
     app.image_label.pack(expand=True)
+
 
     # Scroll container for folders
     app.folder_canvas = tk.Canvas(app.content_frame, height=220)

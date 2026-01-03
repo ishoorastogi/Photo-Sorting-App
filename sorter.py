@@ -4,6 +4,8 @@ from PIL import Image, ImageTk
 from pathlib import Path
 import shutil
 from send2trash import send2trash
+from PIL import Image, ImageTk
+import cv2
 
 from Keybinds import bind_keyboard_shortcuts
 from ui import build_ui
@@ -21,7 +23,9 @@ from deletion import delete_current_image
 #
 ###
 
-SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", "mp4")
+SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".mp4")
+PRIVATE_TRASH_NAME = "._trash-temp"
+
 
 class PhotoSorterApp:
     def is_video(self, path: Path):
@@ -71,14 +75,26 @@ class PhotoSorterApp:
             self.root.quit()
             return
         self.current_image_path = self.images[self.index]
+        # if self.is_video(self.current_image_path):
+        #     self.image_label.config(
+        #         image = "",
+        #         text = f"Video File\n\n{self.current_image_path.name}",
+        #         font = ("Helvetica", 16),
+        #         justify = "center"
+        #     )
+        #     return
         if self.is_video(self.current_image_path):
-            self.image_label.config(
-                image = "",
-                text = f"Video File\n\n{self.current_image_path.name}",
-                font = ("Helvetica", 16),
-                justify = "center"
-            )
+            try:
+                self.load_video_frame(self.current_image_path)
+            except Exception:
+                self.image_label.config(
+                    image="",
+                    text=f"Video File\n\n{self.current_image_path.name}",
+                    font=("Helvetica", 16),
+                    justify="center"
+                )
             return
+
         try:
             img = Image.open(self.current_image_path)
             img.thumbnail((900, 700))
@@ -97,6 +113,8 @@ class PhotoSorterApp:
             widget.destroy()
         
         for folder in sorted(self.source_dir.iterdir()):
+            if folder.name == PRIVATE_TRASH_NAME:
+                continue
             if folder.is_dir():
                 if folder == self.source_dir:
                     continue
@@ -157,6 +175,29 @@ class PhotoSorterApp:
             shutil.move(action["from"], action["to"])
             self.index = max(self.index - 1, 0)
             self.load_image()
+
+    def load_video_frame(self, path):
+        cap = cv2.VideoCapture(str(path))
+        success, frame = cap.read()
+        cap.release()
+
+        if not success:
+            raise RuntimeError("Could not read video")
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame)
+        img.thumbnail((900, 700))
+
+        self.tk_image = ImageTk.PhotoImage(img)
+
+        self.image_label.config(
+            image=self.tk_image,
+            text=""
+        )
+        self.image_label.pack(expand=True)
+        self.image_label.update_idletasks()
+
+
 
 
 
