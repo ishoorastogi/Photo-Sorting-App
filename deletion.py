@@ -2,7 +2,7 @@
 
 from tkinter import messagebox
 import shutil
-#from send2trash import send2trash
+import media_loader
 
 PRIVATE_TRASH_NAME = "._trash-temp"
 
@@ -13,7 +13,7 @@ def ensure_private_trash(app):
 
 
 def delete_current_image(app):
-    app.stop_video()
+    media_loader.stop_video(app)
     if not app.current_image_path:
         return
 

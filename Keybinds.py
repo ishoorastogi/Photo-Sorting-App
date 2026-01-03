@@ -1,5 +1,6 @@
 ## Keybinds
 from deletion import delete_current_image
+import media_loader
 
 def bind_keyboard_shortcuts(app):
         root = app.root
@@ -12,4 +13,4 @@ def bind_keyboard_shortcuts(app):
         root.bind("<Tab>", lambda e: app.create_new_folder())
 
         #Spacebar is playing/pausing videos
-        root.bind("<space>", lambda e: app.toggle_video())
+        root.bind("<space>", lambda e: media_loader.toggle_video(app))
