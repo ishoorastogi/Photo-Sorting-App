@@ -10,3 +10,6 @@ def bind_keyboard_shortcuts(app):
         
         #Tab makes new folder
         root.bind("<Tab>", lambda e: app.create_new_folder())
+
+        #Spacebar is playing/pausing videos
+        root.bind("<space>", lambda e: app.toggle_video())

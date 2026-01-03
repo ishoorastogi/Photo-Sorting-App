@@ -19,6 +19,17 @@ def build_ui(app):
     # Image label (for photos)
     app.image_label = tk.Label(app.image_frame)
     app.image_label.pack(expand=True)
+    # Play overlay (hidden by default)
+    app.video_overlay = tk.Label(
+        app.image_frame,
+        text="▶",
+        font=("Helvetica", 64, "bold"),
+        fg="white",
+        bg="black"
+    )
+
+    app.video_overlay.place_forget()
+
 
 
     # Scroll container for folders

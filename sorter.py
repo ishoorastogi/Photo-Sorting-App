@@ -36,6 +36,9 @@ class PhotoSorterApp:
         self.root = root
         self.root.title("Photo Sorter")
 
+        self.video_cap = None
+        self.video_playing = False
+
         self.images = []
         self.index = 0
         self.current_image_path = None
@@ -67,6 +70,7 @@ class PhotoSorterApp:
         self.refresh_folder_buttons()
    
     def load_image(self):
+        self.video_overlay.place_forget()
         if self.index >= len(self.images):
             from cleanup import cleanup_private_trash
             cleanup_private_trash(self)
@@ -75,18 +79,11 @@ class PhotoSorterApp:
             self.root.quit()
             return
         self.current_image_path = self.images[self.index]
-        # if self.is_video(self.current_image_path):
-        #     self.image_label.config(
-        #         image = "",
-        #         text = f"Video File\n\n{self.current_image_path.name}",
-        #         font = ("Helvetica", 16),
-        #         justify = "center"
-        #     )
-        #     return
         if self.is_video(self.current_image_path):
             try:
-                self.load_video_frame(self.current_image_path)
-            except Exception:
+                self.load_video_paused(self.current_image_path)
+            except Exception as e:
+                print("VIDEO ERROR:", e)
                 self.image_label.config(
                     image="",
                     text=f"Video File\n\n{self.current_image_path.name}",
@@ -95,6 +92,7 @@ class PhotoSorterApp:
                 )
             return
 
+        
         try:
             img = Image.open(self.current_image_path)
             img.thumbnail((900, 700))
@@ -129,6 +127,7 @@ class PhotoSorterApp:
 
 
     def move_image(self, target_folder):
+        self.stop_video()
         destination = target_folder / self.current_image_path.name
 
         if destination.exists():
@@ -160,6 +159,7 @@ class PhotoSorterApp:
             messagebox.showerror("Error", "Folder already exists.")
 
     def undo_last_action(self):
+        self.stop_video()
         if not self.undo_stack:
             messagebox.showinfo("Undo", "Nothing to undo.")
             return
@@ -176,27 +176,74 @@ class PhotoSorterApp:
             self.index = max(self.index - 1, 0)
             self.load_image()
 
-    def load_video_frame(self, path):
-        cap = cv2.VideoCapture(str(path))
-        success, frame = cap.read()
-        cap.release()
+    def load_video_paused(self, path):
+        self.stop_video()
 
+        self.video_cap = cv2.VideoCapture(str(path))
+        if not self.video_cap.isOpened():
+            raise RuntimeError("Could not open video")
+
+        # Read ONE frame only
+        success, frame = self.video_cap.read()
         if not success:
-            raise RuntimeError("Could not read video")
+            raise RuntimeError("Could not read first frame")
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
         img.thumbnail((900, 700))
 
         self.tk_image = ImageTk.PhotoImage(img)
-
-        self.image_label.config(
-            image=self.tk_image,
-            text=""
-        )
+        self.image_label.config(image=self.tk_image, text="")
         self.image_label.pack(expand=True)
-        self.image_label.update_idletasks()
 
+        # IMPORTANT: start paused
+        self.video_playing = False
+        self.video_overlay.place(relx=0.5, rely=0.5, anchor="center")
+
+    
+    def _play_next_frame(self):
+        if not self.video_playing or self.video_cap is None:
+            return
+
+        success, frame = self.video_cap.read()
+
+        if not success:
+            # Loop video (or stop here if you prefer)
+            self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            success, frame = self.video_cap.read()
+            if not success:
+                self.stop_video()
+                return
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame)
+        img.thumbnail((900, 700))
+
+        self.tk_image = ImageTk.PhotoImage(img)
+        self.image_label.config(image=self.tk_image, text="")
+        self.image_label.pack(expand=True)
+
+        # ~30 FPS
+        self.root.after(33, self._play_next_frame)
+
+    def stop_video(self):
+        self.video_playing = False
+
+        if self.video_cap is not None:
+            self.video_cap.release()
+            self.video_cap = None
+    
+    def toggle_video(self):
+        if self.video_cap is None:
+            return
+
+        if self.video_playing:
+            self.video_playing = False
+            self.video_overlay.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.video_playing = True
+            self.video_overlay.place_forget()
+            self._play_next_frame()
 
 
 

@@ -13,6 +13,7 @@ def ensure_private_trash(app):
 
 
 def delete_current_image(app):
+    app.stop_video()
     if not app.current_image_path:
         return
 
