@@ -12,33 +12,37 @@ def _is_descendant(widget, ancestor):
         w = w.master
     return False
 
-
 def _install_folder_scrolling(app):
     root = app.root
     canvas = app.folder_canvas
 
-    def _units_from_delta(delta):
-        # Windows wheel: +/-120 per notch
-        # macOS trackpad: small deltas (often +/-1..10)
-        if delta == 0:
-            return 0
-        if abs(delta) < 120:
-            return -1 if delta > 0 else 1
-        return int(-delta / 120)
+    # Track a precise scroll position (0.0 → 1.0)
+    app._scroll_pos = 0.0
 
     def _on_mousewheel(event):
-        # Which widget is the mouse currently over?
         widget = root.winfo_containing(
             root.winfo_pointerx(),
             root.winfo_pointery()
         )
 
-        # Only scroll if mouse is over folder list (buttons included)
-        if widget and _is_descendant(widget, canvas):
-            units = _units_from_delta(getattr(event, "delta", 0))
-            if units:
-                canvas.yview_scroll(units, "units")
-                return "break"
+        if not widget or not _is_descendant(widget, canvas):
+            return
+
+        delta = getattr(event, "delta", 0)
+        if delta == 0:
+            return
+
+        # Normalize delta (macOS trackpad safe)
+        step = -delta / 100.0   # smaller = slower, smoother
+
+        # Update position
+        app._scroll_pos += step
+
+        # Clamp to valid range
+        app._scroll_pos = max(0.0, min(1.0, app._scroll_pos))
+
+        canvas.yview_moveto(app._scroll_pos)
+        return "break"
 
     def _on_linux_up(event):
         widget = root.winfo_containing(
@@ -46,7 +50,8 @@ def _install_folder_scrolling(app):
             root.winfo_pointery()
         )
         if widget and _is_descendant(widget, canvas):
-            canvas.yview_scroll(-3, "units")
+            app._scroll_pos = max(0.0, app._scroll_pos - 0.05)
+            canvas.yview_moveto(app._scroll_pos)
             return "break"
 
     def _on_linux_down(event):
@@ -55,7 +60,8 @@ def _install_folder_scrolling(app):
             root.winfo_pointery()
         )
         if widget and _is_descendant(widget, canvas):
-            canvas.yview_scroll(3, "units")
+            app._scroll_pos = min(1.0, app._scroll_pos + 0.05)
+            canvas.yview_moveto(app._scroll_pos)
             return "break"
 
     # Global binds (required so buttons receive scroll)
@@ -63,10 +69,9 @@ def _install_folder_scrolling(app):
     root.bind_all("<Button-4>", _on_linux_up)       # Linux
     root.bind_all("<Button-5>", _on_linux_down)     # Linux
 
-
 def build_ui(app):
     root = app.root
-    
+    app._scroll_after_id = None
 
     # Main content frame
     app.content_frame = tk.Frame(root)
