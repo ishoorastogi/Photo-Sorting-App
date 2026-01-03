@@ -74,9 +74,30 @@ class PhotoSorterApp:
         if self.index >= len(self.images):
             from cleanup import cleanup_private_trash
             cleanup_private_trash(self)
-            messagebox.showinfo("Done", "All files sorted")
-            self.root.quit()
+
+            again = messagebox.askyesno(
+                "All files sorted",
+                "All files have been sorted.\n\nWould you like to sort another folder?"
+            )
+
+            if again:
+                # Reset state
+                self.images = []
+                self.index = 0
+                self.current_image_path = None
+
+                # Clear UI
+                self.image_label.config(image="", text="")
+                if hasattr(self, "video_overlay"):
+                    self.video_overlay.place_forget()
+
+                # Ask for new folder
+                self.select_source_folder()
+            else:
+                self.root.quit()
+
             return
+
 
         self.current_image_path = self.images[self.index]
 

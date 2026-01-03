@@ -1,6 +1,7 @@
 ## Keybinds
 from deletion import delete_current_image
 import media_loader
+import subprocess
 
 def bind_keyboard_shortcuts(app):
         root = app.root
@@ -14,3 +15,10 @@ def bind_keyboard_shortcuts(app):
 
         #Spacebar is playing/pausing videos
         root.bind("<space>", lambda e: media_loader.toggle_video(app))
+
+        root.bind(
+                "<Return>",
+                lambda e: subprocess.Popen(
+                        ["open", str(app.current_image_path)]
+                ) if app.current_image_path and app.is_video(app.current_image_path) else None
+        )
