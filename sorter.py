@@ -1,6 +1,4 @@
 import tkinter as tk
-import shutil
-from tkinter import filedialog, simpledialog, messagebox
 from pathlib import Path
 
 from keybinds import bind_keyboard_shortcuts
@@ -8,6 +6,7 @@ from ui import build_ui
 from undo import UndoManager
 from file_routing import FileRouter
 import media_loader
+import dialogs
 
 
 ###
@@ -18,10 +17,6 @@ import media_loader
 #session completion handler
 #dialogs
 ###
-
-SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".mp4")
-PRIVATE_TRASH_NAME = "._trash-temp"
-
 
 class PhotoSorterApp:
     def is_video(self, path: Path):
@@ -47,7 +42,7 @@ class PhotoSorterApp:
         self._action_lock = False
 
     def select_source_folder(self):
-        folder = filedialog.askdirectory(title="Select Photo Folder")
+        folder = dialogs.pick_source_folder(self.root)
         self.refocus_app()
 
         if not folder:
@@ -69,14 +64,12 @@ class PhotoSorterApp:
         self.tk_image = None
 
         if not self.images:
-            messagebox.showerror("Error", "No supported media found in this folder.")
+            dialogs.show_no_media_error()
             self.root.quit()
             return
 
-        # Clear label (optional, but prevents “flash” of old frame)
         self.image_label.config(image="", text="")
 
-        # Rebuild targets + show first media
         self.refresh_folder_buttons()
         self.load_image()
 
@@ -87,10 +80,7 @@ class PhotoSorterApp:
             from cleanup import cleanup_private_trash
             cleanup_private_trash(self)
 
-            again = messagebox.askyesno(
-                "All files sorted",
-                "All files have been sorted.\n\nWould you like to sort another folder?"
-            )
+            again = dialogs.confirm_sort_another_folder()
 
             if again:
                 self.undo.clear()
@@ -129,40 +119,39 @@ class PhotoSorterApp:
     def refresh_folder_buttons(self):
         for widget in self.folder_frame.winfo_children():
             widget.destroy()
-        
-        for folder in sorted(self.source_dir.iterdir()):
-            if folder.name == PRIVATE_TRASH_NAME:
+
+        for folder in self.router.list_target_folders():
+            if folder == self.source_dir:
                 continue
-            if folder.is_dir():
-                if folder == self.source_dir:
-                    continue
 
-                btn = tk.Button(
-                    self.folder_frame,
-                    text=folder.name,
-                    width=25,
-                    command=lambda f=folder: self.move_image(f)
-                )
-                btn.pack(pady=2)
-
+            btn = tk.Button(
+                self.folder_frame,
+                text=folder.name,
+                width=25,
+                command=lambda f=folder: self.move_image(f)
+            )
+            btn.pack(pady=2)
 
     def move_image(self, target_folder):
         media_loader.stop_video(self)
-        destination = target_folder / self.current_image_path.name
 
-        if destination.exists():
-            messagebox.showerror("Error", "File already exists in target folder.")
+        try:
+            result = self.router.move(self.current_image_path, target_folder, on_collision="error")
+        except FileExistsError:
+            dialogs.show_file_exists_error()
+            return
+        except Exception as e:
+            # optional: add this dialog helper if you want
+            dialogs.show_move_failed_error(str(e))
             return
 
-        shutil.move(self.current_image_path, destination)
-        self.undo.push_move(moved_to=destination, restore_to=self.current_image_path)
+        self.undo.push_move(moved_to=result.dst, restore_to=result.src)
 
         self.index += 1
         self.load_image()
 
-
     def create_new_folder(self):
-        name = simpledialog.askstring("New Folder", "Folder name:")
+        name = dialogs.ask_new_folder_name(self.root)
         
         self.refocus_app()
         
@@ -174,7 +163,7 @@ class PhotoSorterApp:
             new_folder.mkdir()
             self.refresh_folder_buttons()
         except FileExistsError:
-            messagebox.showerror("Error", "Folder already exists.")
+            dialogs.show_folder_exists_error()
 
     def undo_last_action(self):
         if not self._try_lock():
