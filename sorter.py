@@ -43,12 +43,15 @@ class PhotoSorterApp:
         build_ui(self)
         bind_keyboard_shortcuts(self)
         self.select_source_folder()
-        self.root.bind_all("<Command-z>", lambda e: (self.undo_last_action(), "break"))
 
         self._action_lock = False
 
     def select_source_folder(self):
         folder = filedialog.askdirectory(title="Select Photo Folder")
+        
+        self.root.lift()
+        self.root.focus_force()
+        
         if not folder:
             self.root.quit()
             return

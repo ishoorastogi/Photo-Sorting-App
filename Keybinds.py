@@ -24,3 +24,6 @@ def bind_keyboard_shortcuts(app):
                         ["open", str(app.current_image_path)]
                 ) if app.current_image_path and app.is_video(app.current_image_path) else None
         )
+
+        #
+        root.bind("<Command-z>", lambda e: (app.undo_last_action(), "break"))
