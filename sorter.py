@@ -1,17 +1,12 @@
 import tkinter as tk
-from tkinter import filedialog, simpledialog, messagebox
-from PIL import Image, ImageTk
-from pathlib import Path
 import shutil
-from send2trash import send2trash
-from PIL import Image, ImageTk
-import cv2
+from tkinter import filedialog, simpledialog, messagebox
+from pathlib import Path
 
 from keybinds import bind_keyboard_shortcuts
 from ui import build_ui
-from deletion import delete_current_image
-import media_loader
 from undo import UndoManager
+import media_loader
 
 
 ###
