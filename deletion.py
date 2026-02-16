@@ -38,11 +38,7 @@ def delete_current_image(app):
 
     shutil.move(app.current_image_path, destination)
 
-    app.undo_stack.append ({
-        "type": "delete",
-        "from": destination,
-        "to": app.current_image_path
-    })
+    app.undo.push_delete(moved_to=destination, restore_to=app.current_image_path)
 
     app.index += 1
     app.load_image()

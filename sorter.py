@@ -11,15 +11,13 @@ from Keybinds import bind_keyboard_shortcuts
 from ui import build_ui
 from deletion import delete_current_image
 import media_loader
+from undo import UndoManager
+
 
 ###
-# left to add:
-# private delete folder that empties at the end
 #
 # make it executable from outside unix
 #
-# if the selected folder has no images, prompt to
-# ask for different folder
 #
 #
 ###
@@ -33,7 +31,7 @@ class PhotoSorterApp:
         return path.suffix.lower() == ".mp4"
     
     def __init__(self, root):
-        self.undo_stack = []
+        self.undo = UndoManager()
         self.root = root
         self.root.title("Photo Sorter")
 
@@ -56,6 +54,7 @@ class PhotoSorterApp:
             return
 
         self.source_dir = Path(folder)
+        self.undo.clear()
         self.images = [
             p for p in self.source_dir.iterdir()
             if p.suffix.lower() in SUPPORTED_EXTENSIONS
@@ -81,7 +80,7 @@ class PhotoSorterApp:
             )
 
             if again:
-                # Reset state
+                self.undo.clear()
                 self.images = []
                 self.index = 0
                 self.current_image_path = None
@@ -143,12 +142,7 @@ class PhotoSorterApp:
             return
 
         shutil.move(self.current_image_path, destination)
-
-        self.undo_stack.append ({
-            "type": "move",
-            "from": destination,
-            "to": self.current_image_path
-        })
+        self.undo.push_move(moved_to=destination, restore_to=self.current_image_path)
 
         self.index += 1
         self.load_image()
@@ -168,21 +162,26 @@ class PhotoSorterApp:
 
     def undo_last_action(self):
         media_loader.stop_video(self)
-        if not self.undo_stack:
+
+        action = self.undo.undo()
+        if action is None:
             messagebox.showinfo("Undo", "Nothing to undo.")
             return
 
-        action = self.undo_stack.pop()
+        try:
+            self.undo.apply(action)  # does shutil.move(action.src, action.dst)
+        except Exception as e:
+            messagebox.showerror("Undo Error", f"Could not undo:\n{e}")
+            return
 
-        if action["type"] == "move":
-            shutil.move(action["from"], action["to"])
-            self.index -= 1
-            self.load_image()
-
-        elif action["type"] == "delete":
-            shutil.move(action["from"], action["to"])
+        if action.type == "move":
             self.index = max(self.index - 1, 0)
-            self.load_image()
+
+        elif action.type == "delete":
+            self.index = max(self.index - 1, 0)
+
+        self.load_image()
+
 
 
 
