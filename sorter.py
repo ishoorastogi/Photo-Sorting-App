@@ -6,6 +6,7 @@ from pathlib import Path
 from keybinds import bind_keyboard_shortcuts
 from ui import build_ui
 from undo import UndoManager
+from file_routing import FileRouter
 import media_loader
 
 
@@ -48,28 +49,39 @@ class PhotoSorterApp:
 
     def select_source_folder(self):
         folder = filedialog.askdirectory(title="Select Photo Folder")
-        
         self.refocus_app()
-        
+
         if not folder:
             self.root.quit()
             return
 
+        media_loader.stop_video(self)
+        if hasattr(self, "video_overlay"):
+            self.video_overlay.place_forget()
+
         self.source_dir = Path(folder)
+
+        self.router = FileRouter(self.source_dir)
+
         self.undo.clear()
-        self.images = [
-            p for p in self.source_dir.iterdir()
-            if p.suffix.lower() in SUPPORTED_EXTENSIONS
-        ]
+        self.images = self.router.list_media()
+        self.index = 0
+        self.current_image_path = None
+        self.tk_image = None
 
         if not self.images:
-            messagebox.showerror("Error", "No images found.")
+            messagebox.showerror("Error", "No supported media found in this folder.")
             self.root.quit()
             return
 
-        self.index = 0
-        self.load_image()
+        # Clear label (optional, but prevents “flash” of old frame)
+        self.image_label.config(image="", text="")
+
+        # Rebuild targets + show first media
         self.refresh_folder_buttons()
+        self.load_image()
+
+
    
     def load_image(self):
         if self.index >= len(self.images):

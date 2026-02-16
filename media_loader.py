@@ -12,7 +12,8 @@ def stop_video(app):
 
 def load_image(app, path):
     stop_video(app)
-    app.video_overlay.place_forget()
+    if hasattr(app, "video_overlay"):
+        app.video_overlay.place_forget()
 
     img = Image.open(path)
     img.thumbnail((900, 700))
