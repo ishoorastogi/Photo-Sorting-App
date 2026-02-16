@@ -10,7 +10,7 @@ def stop_video(app):
         app.video_cap = None
 
 
-def load_image(app, path):
+def render_image(app, path):
     stop_video(app)
     if hasattr(app, "video_overlay"):
         app.video_overlay.place_forget()
@@ -23,7 +23,7 @@ def load_image(app, path):
     app.image_label.pack(expand=True)
 
 
-def load_video_paused(app, path):
+def render_video_paused(app, path):
     stop_video(app)
 
     app.video_cap = cv2.VideoCapture(str(path))

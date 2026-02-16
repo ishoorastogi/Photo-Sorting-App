@@ -13,7 +13,6 @@ import media_loader
 ###
 #
 # make it executable from outside unix
-#seperate file routing
 #state manager
 #file ops layer
 #session completion handler
@@ -116,9 +115,9 @@ class PhotoSorterApp:
 
         try:
             if self.is_video(self.current_image_path):
-                media_loader.load_video_paused(self, self.current_image_path)
+                media_loader.render_video_paused(self, self.current_image_path)
             else:
-                media_loader.load_image(self, self.current_image_path)
+                media_loader.render_image(self, self.current_image_path)
         except Exception as e:
             print("MEDIA LOAD ERROR:", e)
             self.image_label.config(
@@ -210,10 +209,6 @@ class PhotoSorterApp:
         self.root.attributes("-topmost", True)
         self.root.after(10, lambda: self.root.attributes("-topmost", False))
         self.root.focus_force()
-
-
-
-
 
 if __name__ == "__main__":
     root = tk.Tk()
