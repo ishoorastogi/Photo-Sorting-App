@@ -13,6 +13,12 @@ def ensure_private_trash(app):
 
 
 def delete_current_image(app):
+    if not app._try_lock():
+        return
+    try:
+        ...
+    finally:
+        app.root.after(80, app._unlock)
     media_loader.stop_video(app)
     if not app.current_image_path:
         return

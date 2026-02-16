@@ -46,6 +46,9 @@ class PhotoSorterApp:
         build_ui(self)
         bind_keyboard_shortcuts(self)
         self.select_source_folder()
+        self.root.bind_all("<Command-z>", lambda e: (self.undo_last_action(), "break"))
+
+        self._action_lock = False
 
     def select_source_folder(self):
         folder = filedialog.askdirectory(title="Select Photo Folder")
@@ -161,26 +164,33 @@ class PhotoSorterApp:
             messagebox.showerror("Error", "Folder already exists.")
 
     def undo_last_action(self):
-        media_loader.stop_video(self)
-
-        action = self.undo.undo()
-        if action is None:
-            messagebox.showinfo("Undo", "Nothing to undo.")
+        if not self._try_lock():
             return
 
         try:
-            self.undo.apply(action)  # does shutil.move(action.src, action.dst)
-        except Exception as e:
-            messagebox.showerror("Undo Error", f"Could not undo:\n{e}")
-            return
+            media_loader.stop_video(self)
 
-        if action.type == "move":
+            action = self.undo.undo()
+            if action is None:
+                return
+
+            self.undo.apply(action)
+
             self.index = max(self.index - 1, 0)
+            self.load_image()
 
-        elif action.type == "delete":
-            self.index = max(self.index - 1, 0)
+        finally:
+            self.root.after(80, self._unlock)
 
-        self.load_image()
+    def _try_lock(self):
+        if self._action_lock:
+            return False
+        self._action_lock = True
+        return True
+
+    def _unlock(self):
+        self._action_lock = False
+
 
 
 
