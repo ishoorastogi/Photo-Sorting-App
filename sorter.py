@@ -49,8 +49,7 @@ class PhotoSorterApp:
     def select_source_folder(self):
         folder = filedialog.askdirectory(title="Select Photo Folder")
         
-        self.root.lift()
-        self.root.focus_force()
+        self.refocus_app()
         
         if not folder:
             self.root.quit()
@@ -153,6 +152,9 @@ class PhotoSorterApp:
 
     def create_new_folder(self):
         name = simpledialog.askstring("New Folder", "Folder name:")
+        
+        self.refocus_app()
+        
         if not name:
             return
 
@@ -190,6 +192,12 @@ class PhotoSorterApp:
 
     def _unlock(self):
         self._action_lock = False
+    
+    def refocus_app(self):
+        self.root.lift()
+        self.root.attributes("-topmost", True)
+        self.root.after(10, lambda: self.root.attributes("-topmost", False))
+        self.root.focus_force()
 
 
 
