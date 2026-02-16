@@ -7,7 +7,7 @@ from send2trash import send2trash
 from PIL import Image, ImageTk
 import cv2
 
-from Keybinds import bind_keyboard_shortcuts
+from keybinds import bind_keyboard_shortcuts
 from ui import build_ui
 from deletion import delete_current_image
 import media_loader
@@ -17,9 +17,11 @@ from undo import UndoManager
 ###
 #
 # make it executable from outside unix
-#
-#
-#
+#seperate file routing
+#state manager
+#file ops layer
+#session completion handler
+#dialogs
 ###
 
 SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".mp4")
