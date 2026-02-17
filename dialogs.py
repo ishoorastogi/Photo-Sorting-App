@@ -42,3 +42,9 @@ def show_folder_exists_error() -> None:
 
 def show_move_failed_error(msg: str) -> None:
     messagebox.showerror("Error", f"Move failed:\n{msg}")
+
+def confirm_delete(filename: str) -> bool:
+    return messagebox.askyesno(
+        "Delete Photo",
+        f"Move '{filename}' to Trash?"
+    )
