@@ -133,6 +133,7 @@ class PhotoSorterApp:
             btn.pack(pady=2)
 
     def move_image(self, target_folder):
+        self.refocus_app()
         media_loader.stop_video(self)
 
         try:
