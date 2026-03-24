@@ -25,5 +25,39 @@ def bind_keyboard_shortcuts(app):
                 ) if app.current_image_path and app.is_video(app.current_image_path) else None
         )
 
-        #
-        root.bind("<Command-z>", lambda e: (app.undo_last_action(), "break"))
+        def _undo(event=None):
+                app.undo_last_action()
+                return "break"
+
+        # Undo shortcuts
+        root.bind("<Command-z>", _undo)
+        root.bind("<Control-z>", _undo)
+
+        # Also allow Escape to trigger undo (convenient alternative)
+        root.bind("<Escape>", _undo)
+        
+        # Skip current photo
+        root.bind("\\", lambda e: (app.skip_current(), "break"))
+
+        def _toggle_videos(event=None):
+                app.set_show_videos(not app.show_videos)
+                return "break"
+
+        # Toggle videos visibility
+        root.bind("<Command-v>", _toggle_videos)
+
+        def _handle_quick_key(event, n):
+                qa = getattr(app, "quick_actions", None)
+                if not qa:
+                        return "break"
+
+                # If no modifiers, activate; if any modifier key pressed (e.g. Cmd), rename
+                if getattr(event, "state", 0) == 0:
+                        qa.activate(n-1)
+                else:
+                        qa.rename_action(n-1)
+                return "break"
+
+        for i in range(1, 5):
+                # bind number key to handler that dispatches based on modifiers
+                root.bind(str(i), lambda e, n=i: _handle_quick_key(e, n))

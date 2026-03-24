@@ -16,35 +16,34 @@ def delete_current_image(app):
     if not app._try_lock():
         return
     try:
-        ...
+        media_loader.stop_video(app)
+        if not app.current_image_path:
+            return
+
+        confirm = messagebox.askyesno(
+            "Delete Photo",
+            f"Move '{app.current_image_path.name}' to Trash?"
+        )
+
+        app.root.focus_force()
+
+        if not confirm:
+            return
+
+        trash_dir = ensure_private_trash(app)
+        destination = trash_dir / app.current_image_path.name
+
+        # Handle name collisions
+        counter = 1
+        while destination.exists():
+            destination = trash_dir / f"{destination.stem}_{counter}{destination.suffix}"
+            counter += 1
+
+        shutil.move(app.current_image_path, destination)
+
+        app.undo.push_delete(moved_to=destination, restore_to=app.current_image_path)
+
+        app.index += 1
+        app.load_image()
     finally:
         app.root.after(80, app._unlock)
-    media_loader.stop_video(app)
-    if not app.current_image_path:
-        return
-
-    confirm = messagebox.askyesno(
-        "Delete Photo",
-        f"Move '{app.current_image_path.name}' to Trash?"
-    )
-
-    app.root.focus_force()
-
-    if not confirm:
-        return
-
-    trash_dir = ensure_private_trash(app)
-    destination = trash_dir / app.current_image_path.name
-
-    # Handle name collisions
-    counter = 1
-    while destination.exists():
-        destination = trash_dir / f"{destination.stem}_{counter}{destination.suffix}"
-        counter += 1
-
-    shutil.move(app.current_image_path, destination)
-
-    app.undo.push_delete(moved_to=destination, restore_to=app.current_image_path)
-
-    app.index += 1
-    app.load_image()

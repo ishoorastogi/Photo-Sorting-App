@@ -2,6 +2,8 @@
 import tkinter as tk
 from deletion import delete_current_image
 from quick_actions import QuickActionsBar
+from state import build_state_controls
+from exit import exit_app
 
 
 def _is_descendant(widget, ancestor):
@@ -135,12 +137,21 @@ def build_ui(app):
     app.action_frame = tk.Frame(root)
     app.action_frame.pack(side="bottom", fill="x", pady=10)
 
+    build_state_controls(app, app.action_frame)
+
     app.new_folder_btn = tk.Button(
         app.action_frame,
         text="➕ New Folder",
         command=app.create_new_folder
     )
     app.new_folder_btn.pack(side="left", padx=10)
+
+    app.skip_btn = tk.Button(
+        app.action_frame,
+        text="Skip",
+        command=app.skip_current
+    )
+    app.skip_btn.pack(side="left", padx=10)
 
     app.undo_btn = tk.Button(
         app.action_frame,
@@ -156,3 +167,10 @@ def build_ui(app):
         command=lambda: delete_current_image(app)
     )
     app.delete_btn.pack(side="right", padx=10)
+
+    app.exit_btn = tk.Button(
+        app.action_frame,
+        text="Exit",
+        command=lambda: exit_app(app)
+    )
+    app.exit_btn.pack(side="right", padx=10)
