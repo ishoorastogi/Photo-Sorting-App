@@ -1,6 +1,7 @@
 ## gui
 import tkinter as tk
 from deletion import delete_current_image
+from quick_actions import QuickActionsBar
 
 
 def _is_descendant(widget, ancestor):
@@ -130,6 +131,7 @@ def build_ui(app):
     _install_folder_scrolling(app)
 
     # Bottom action bar
+    app.quick_actions = QuickActionsBar(app, root)
     app.action_frame = tk.Frame(root)
     app.action_frame.pack(side="bottom", fill="x", pady=10)
 
