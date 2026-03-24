@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".mp4")
+SUPPORTED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mov")
 PRIVATE_TRASH_NAME = "._trash-temp"
 
 
