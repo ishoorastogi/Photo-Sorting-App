@@ -136,29 +136,27 @@ def build_ui(app):
     app.quick_actions = QuickActionsBar(app, root)
     app.action_frame = tk.Frame(root)
     app.action_frame.pack(side="bottom", fill="x", pady=10)
+    app.action_frame.pack_propagate(False)
 
-    build_state_controls(app, app.action_frame)
+    videos_toggle = build_state_controls(app, app.action_frame)
 
     app.new_folder_btn = tk.Button(
         app.action_frame,
         text="➕ New Folder",
         command=app.create_new_folder
     )
-    app.new_folder_btn.pack(side="left", padx=10)
 
     app.skip_btn = tk.Button(
         app.action_frame,
         text="Skip",
         command=app.skip_current
     )
-    app.skip_btn.pack(side="left", padx=10)
 
     app.undo_btn = tk.Button(
         app.action_frame,
         text="↩ Undo",
         command=app.undo_last_action
     )
-    app.undo_btn.pack(side="left", padx=10)
 
     app.delete_btn = tk.Button(
         app.action_frame,
@@ -166,11 +164,51 @@ def build_ui(app):
         fg="red",
         command=lambda: delete_current_image(app)
     )
-    app.delete_btn.pack(side="right", padx=10)
 
     app.exit_btn = tk.Button(
         app.action_frame,
         text="Exit",
         command=lambda: exit_app(app)
     )
-    app.exit_btn.pack(side="right", padx=10)
+    app._action_buttons = [
+        videos_toggle,
+        app.new_folder_btn,
+        app.skip_btn,
+        app.undo_btn,
+        app.exit_btn,
+        app.delete_btn,
+    ]
+
+    def _layout_action_buttons(event=None):
+        buttons = app._action_buttons
+        if not buttons:
+            return
+
+        frame = app.action_frame
+        frame.update_idletasks()
+        available = frame.winfo_width()
+        if available <= 1:
+            return
+
+        gap = 10
+        max_w = max(b.winfo_reqwidth() for b in buttons)
+        max_h = max(b.winfo_reqheight() for b in buttons)
+        min_w = max(1, max_w // 2)
+
+        cols = max(1, (available + gap) // (min_w + gap))
+        cols = min(cols, len(buttons))
+        width = min(max_w, max(min_w, int((available - gap * (cols - 1)) / cols)))
+        width = min(width, available)
+
+        for i, btn in enumerate(buttons):
+            row = i // cols
+            col = i % cols
+            x = col * (width + gap)
+            y = row * (max_h + gap)
+            btn.place(x=x, y=y, width=width, height=max_h)
+
+        rows = (len(buttons) + cols - 1) // cols
+        frame.configure(height=rows * max_h + gap * (rows - 1))
+
+    app.action_frame.bind("<Configure>", _layout_action_buttons)
+    app.root.after(0, _layout_action_buttons)

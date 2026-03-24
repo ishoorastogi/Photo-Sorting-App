@@ -16,4 +16,4 @@ def build_state_controls(app, parent_frame):
         variable=app._show_videos_var,
         command=_on_toggle
     )
-    app.videos_toggle.pack(side="left", padx=10)
+    return app.videos_toggle
