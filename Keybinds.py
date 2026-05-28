@@ -36,7 +36,7 @@ def bind_keyboard_shortcuts(app):
         # Also allow Escape to trigger undo (convenient alternative)
         root.bind("<Escape>", _undo)
         
-        # Skip current photo
+        # Skip current photo "\"
         root.bind("\\", lambda e: (app.skip_current(), "break"))
 
         def _toggle_videos(event=None):
